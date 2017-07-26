@@ -507,15 +507,26 @@
             });
         }
     });
+}
+
+- (void)doneButtonClickClipImage:(UIImage *)clipImage asset:(id)asset
+{
+    LFImagePickerController *imagePickerVc = (LFImagePickerController *)self.navigationController;
+    id <LFImagePickerControllerDelegate> pickerDelegate = (id <LFImagePickerControllerDelegate>)imagePickerVc.pickerDelegate;
     
+    if (imagePickerVc.autoDismiss) {
+        [imagePickerVc dismissViewControllerAnimated:YES completion:^{
+            if ([pickerDelegate respondsToSelector:@selector(lf_imagePickerController:didFinishClipPhoto:asset:)]) {
+                [pickerDelegate lf_imagePickerController:imagePickerVc didFinishClipPhoto:clipImage asset:asset];
+            }
+        }];
+    }
 }
 
 - (void)callDelegateMethodWithResults:(NSArray <LFResultObject *>*)results {
     
     LFImagePickerController *imagePickerVc = (LFImagePickerController *)self.navigationController;
     id <LFImagePickerControllerDelegate> pickerDelegate = (id <LFImagePickerControllerDelegate>)imagePickerVc.pickerDelegate;
-    
-    
     
     if ([pickerDelegate respondsToSelector:@selector(lf_imagePickerController:didFinishPickingResult:)]) {
         [pickerDelegate lf_imagePickerController:imagePickerVc didFinishPickingResult:results];
@@ -564,6 +575,10 @@
     
     cell.model = model;
     [cell selectPhoto:model.isSelected index:[imagePickerVc.selectedModels indexOfObject:model]+1 animated:NO];
+    
+    if (imagePickerVc.allowClip) { // 单选裁切模式隐藏选择按钮
+        [cell hideSelectButton];
+    }
     
     __weak typeof(self) weakSelf = self;
     cell.didSelectPhotoBlock = ^(BOOL isSelected, LFAsset *cellModel, LFAssetCell *weakCell) {
@@ -798,6 +813,9 @@
     [photoPreviewVc setDoneButtonClickBlock:^{
         [weakSelf doneButtonClick];
     }];
+    [photoPreviewVc setDoneButtonClickClipModeBlock:^(UIImage *clipImage,id asset){
+        [weakSelf doneButtonClickClipImage:clipImage asset:asset];
+    }];
     
     if (photoEdittingVC) {
         NSMutableArray *viewControllers = [self.navigationController.viewControllers mutableCopy];
@@ -808,7 +826,6 @@
         [self.navigationController pushViewController:photoPreviewVc animated:YES];
     }
 }
-
 
 - (void)getSelectedPhotoBytes {
     if (/* DISABLES CODE */ (1)==0) {

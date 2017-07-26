@@ -54,6 +54,7 @@
 		6FAA50C81ED5336A002D88A2 /* LFPreviewBarCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 6FAA50C71ED5336A002D88A2 /* LFPreviewBarCell.m */; };
 		6FF286181E5EDA510008FB5B /* LFPhotoEditManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 6FF286171E5EDA510008FB5B /* LFPhotoEditManager.m */; };
 		6FF2861C1E5FFF170008FB5B /* LFImagePickerHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = 6FF2861B1E5FFF170008FB5B /* LFImagePickerHeader.m */; };
+		B4A015531F2860E50018876C /* LFPhotoClipManager.m in Sources */ = {isa = PBXBuildFile; fileRef = B4A015521F2860E50018876C /* LFPhotoClipManager.m */; };
 		B9530F92260AF2E0D988FD0A /* libPods-LFImagePickerController.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D6AFC7E26577C89E24C904A /* libPods-LFImagePickerController.a */; };
 /* End PBXBuildFile section */
 
@@ -152,6 +153,8 @@
 		6FF2861B1E5FFF170008FB5B /* LFImagePickerHeader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LFImagePickerHeader.m; sourceTree = "<group>"; };
 		8D6AFC7E26577C89E24C904A /* libPods-LFImagePickerController.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-LFImagePickerController.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A29AB11219062E6A4B810545 /* Pods-LFImagePickerController.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LFImagePickerController.release.xcconfig"; path = "../Pods/Target Support Files/Pods-LFImagePickerController/Pods-LFImagePickerController.release.xcconfig"; sourceTree = "<group>"; };
+		B4A015521F2860E50018876C /* LFPhotoClipManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LFPhotoClipManager.m; sourceTree = "<group>"; };
+		B4A015541F28620B0018876C /* LFPhotoClipManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LFPhotoClipManager.h; sourceTree = "<group>"; };
 		DA7F571BE722254777162CD5 /* Pods-LFImagePickerController.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LFImagePickerController.debug.xcconfig"; path = "../Pods/Target Support Files/Pods-LFImagePickerController/Pods-LFImagePickerController.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -303,6 +306,8 @@
 				6F1201AF1E51520400EA2198 /* LFAssetManager+Authorization.m */,
 				6FF286161E5EDA510008FB5B /* LFPhotoEditManager.h */,
 				6FF286171E5EDA510008FB5B /* LFPhotoEditManager.m */,
+				B4A015541F28620B0018876C /* LFPhotoClipManager.h */,
+				B4A015521F2860E50018876C /* LFPhotoClipManager.m */,
 			);
 			name = manager;
 			path = LFImagePickerController/class/manager;
@@ -496,7 +501,7 @@
 				TargetAttributes = {
 					6F1201731E513D1B00EA2198 = {
 						CreatedOnToolsVersion = 8.2.1;
-						DevelopmentTeam = 3VDRUN62M8;
+						DevelopmentTeam = B68HH445ZF;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -629,6 +634,7 @@
 				6F1201E91E519E8300EA2198 /* LF_FileUtility.m in Sources */,
 				6F1201C21E51884B00EA2198 /* LFLayoutPickerController.m in Sources */,
 				6F1201EA1E519E8300EA2198 /* LF_VideoUtils.m in Sources */,
+				B4A015531F2860E50018876C /* LFPhotoClipManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -747,11 +753,14 @@
 			baseConfigurationReference = DA7F571BE722254777162CD5 /* Pods-LFImagePickerController.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 3VDRUN62M8;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = B68HH445ZF;
 				INFOPLIST_FILE = LFImagePickerController/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.lincf0912.LFImagePickerController;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -761,11 +770,14 @@
 			baseConfigurationReference = A29AB11219062E6A4B810545 /* Pods-LFImagePickerController.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 3VDRUN62M8;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = B68HH445ZF;
 				INFOPLIST_FILE = LFImagePickerController/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.lincf0912.LFImagePickerController;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

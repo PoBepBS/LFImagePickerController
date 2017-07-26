@@ -65,6 +65,7 @@
 
 
 @interface LFPhotoPreviewCell () <UIScrollViewDelegate>
+
 @property (nonatomic, strong) UIImageView *imageView;
 @property (nonatomic, strong) UIScrollView *scrollView;
 @property (nonatomic, strong) UIView *imageContainerView;
@@ -210,6 +211,36 @@
         UIView *view = [self subViewInitDisplayView];
         view.frame = _imageContainerView.bounds;
     }
+
+    [self refreshScrollViewContentSize];
+}
+
+- (void)refreshScrollViewContentSize
+{
+    if (_allowClip) {
+        UIView *clipView = [[UIView alloc] init];
+        clipView.bounds = CGRectMake(0, 0, _clipSize.width, _clipSize.height);
+        clipView.center = self.scrollView.center;
+        
+        CGFloat contentWidthAdd = self.scrollView.width - CGRectGetMaxX(clipView.frame);
+        CGFloat contentHeightAdd = (MIN(_imageContainerView.height, self.height) - clipView.height) /2;
+        CGFloat newSizeW = self.scrollView.contentSize.width + contentWidthAdd;
+        CGFloat newSizeH = MAX(self.scrollView.contentSize.height, self.height) + contentHeightAdd;
+        _scrollView.contentSize = CGSizeMake(newSizeW, newSizeH);
+        _scrollView.alwaysBounceVertical = YES;
+        
+        if (contentHeightAdd > 0) {
+            _scrollView.contentInset = UIEdgeInsetsMake(contentHeightAdd, clipView.origin.x, 0, 0);
+            if (_scrollView.zoomScale == 1) {
+                CGPoint point = _scrollView.contentOffset;
+                point.y = 0;
+                _scrollView.contentOffset = point;
+            }
+        }
+        else {
+            _scrollView.contentInset = UIEdgeInsetsZero;
+        }
+    }
 }
 
 #pragma mark - UITapGestureRecognizer Event
@@ -235,12 +266,22 @@
 
 #pragma mark - UIScrollViewDelegate
 
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+    NSLog(@"%f, %f",scrollView.contentOffset.x,scrollView.contentOffset.y);
+}
+
 - (nullable UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView {
     return _imageContainerView;
 }
 
 - (void)scrollViewDidZoom:(UIScrollView *)scrollView {
     [self refreshImageContainerViewCenter];
+}
+
+- (void)scrollViewDidEndZooming:(UIScrollView *)scrollView withView:(UIView *)view atScale:(CGFloat)scale
+{
+    [self refreshScrollViewContentSize];
 }
 
 #pragma mark - Private

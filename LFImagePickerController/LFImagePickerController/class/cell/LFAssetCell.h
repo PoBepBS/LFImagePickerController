@@ -31,6 +31,8 @@
 /** 设置选中 */
 - (void)selectPhoto:(BOOL)isSelected index:(NSUInteger)index animated:(BOOL)animated;
 
+/** 隐藏选择按钮 */
+- (void)hideSelectButton;
 @end
 
 /// 拍照视图

@@ -14,6 +14,7 @@
 /// Return the new selected photos / 返回最新的选中图片数组
 @property (nonatomic, copy) void (^backButtonClickBlock)();
 @property (nonatomic, copy) void (^doneButtonClickBlock)();
+@property (nonatomic, copy) void (^doneButtonClickClipModeBlock)(UIImage *clipImage,id asset);
 
 /** 初始化 */
 - (instancetype)initWithModels:(NSArray <LFAsset *>*)models index:(NSInteger)index excludeVideo:(BOOL)excludeVideo;

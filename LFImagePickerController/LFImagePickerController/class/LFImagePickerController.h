@@ -24,6 +24,7 @@
 /// This init method just for previewing photos, complete block call back  (invalid delegate)/ 用这个初始化方法以预览图片 complete => 完成后返回全新数组 （代理无效）
 - (instancetype)initWithSelectedPhotos:(NSArray <UIImage *>*)selectedPhotos index:(NSInteger)index complete:(void (^)(NSArray <UIImage *>* photos))complete;
 
+
 /** 预览模式 */
 @property (nonatomic, readonly) BOOL isPreview;
 
@@ -90,6 +91,18 @@
 /// The name of the album displayed, default SmartAlbumUserLibrary
 /// 显示的相册名称，默认为相机胶卷
 @property (nonatomic, copy) NSString *defaultAlbumName;
+
+/// Default is NO, if set YES, the picker will enter clip view after click the photo
+/// 默认为NO，如果设置为YES，选择器会在单选图片后直接进入裁剪页面
+@property (nonatomic, assign) BOOL allowClip;
+
+/// Default is NO, if set YES, the picker will use circle mask in clip mode
+/// 默认为NO，如果设置为YES，单选裁剪会使用圆形裁剪框进行裁剪
+@property (nonatomic, assign) BOOL needCircleClip;
+
+/// The size of clip mask
+/// 单选图片裁剪区域尺寸，默认为100x100
+@property (nonatomic, assign) CGSize clipSize;
 
 #pragma mark - option
 
@@ -185,7 +198,7 @@
  */
 - (void)lf_imagePickerController:(LFImagePickerController *)picker didFinishPickingResult:(NSArray <LFResultObject /* <LFResultImage/LFResultVideo> */*> *)results;
 
-
+- (void)lf_imagePickerController:(LFImagePickerController *)picker didFinishClipPhoto:(UIImage *)clipImage asset:(id)asset;
 
 #pragma mark - Deprecated
 /// ======== 图片回调 ========

@@ -16,6 +16,9 @@
 @property (nonatomic, strong) LFAsset *model;
 @property (nonatomic, weak) id<LFPhotoPreviewCellDelegate> delegate;
 
+@property (nonatomic, assign) BOOL allowClip;
+@property (nonatomic, assign) CGSize clipSize;
+
 /** 当前展示的图片 */
 @property (nonatomic, readwrite) UIImage *previewImage;
 

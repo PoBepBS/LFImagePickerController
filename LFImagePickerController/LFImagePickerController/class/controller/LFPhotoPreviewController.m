@@ -13,6 +13,7 @@
 #import "UIView+LFFrame.h"
 #import "UIView+LFAnimate.h"
 #import "LFPhotoPreviewCell.h"
+#import "LFPhotoPreviewCell_property.h"
 #import "LFPhotoPreviewGifCell.h"
 #import "LFPhotoPreviewLivePhotoCell.h"
 #import "LFPhotoPreviewVideoCell.h"
@@ -23,6 +24,7 @@
 #import "UIImage+LFCommon.h"
 #import "LFPhotoEditManager.h"
 #import "LFGifPlayerManager.h"
+#import "LFPhotoClipManager.h"
 
 CGFloat const cellMargin = 20.f;
 CGFloat const livePhotoSignMargin = 10.f;
@@ -47,6 +49,8 @@ CGFloat const livePhotoSignMargin = 10.f;
 }
 
 @property (nonatomic, strong) UICollectionView *collectionView;
+@property (nonatomic, strong) UIView *clipBGView;   //!< 裁剪背景板
+@property (nonatomic, strong) UIView *clipView;     //!< 裁剪框
 
 @property (nonatomic, strong) NSMutableArray <LFAsset *>*models;                  ///< All photo models / 所有图片模型数组
 @property (nonatomic, assign) NSInteger currentIndex;           ///< Index of the photo user click / 用户点击的图片的索引
@@ -117,6 +121,7 @@ CGFloat const livePhotoSignMargin = 10.f;
     [super viewDidLoad];
 
     [self configCollectionView];
+    [self configClipView];
     [self configCustomNaviBar];
     [self configBottomToolBar];
     [self configPreviewBar];
@@ -181,12 +186,14 @@ CGFloat const livePhotoSignMargin = 10.f;
     [_backButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [_backButton addTarget:self action:@selector(backButtonClick) forControlEvents:UIControlEventTouchUpInside];
     
-    _selectButton = [[UIButton alloc] initWithFrame:CGRectMake(self.view.width - 30 - 8, (naviBarHeight-30)/2, 30, 30)];
-    _selectButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
-    [_selectButton setImage:bundleImageNamed(imagePickerVc.photoDefImageName) forState:UIControlStateNormal];
-    [_selectButton setImage:bundleImageNamed(imagePickerVc.photoSelImageName) forState:UIControlStateSelected];
-    [_selectButton addTarget:self action:@selector(select:) forControlEvents:UIControlEventTouchUpInside];
-    [_naviBar addSubview:_selectButton];
+    if (!imagePickerVc.allowClip) {
+        _selectButton = [[UIButton alloc] initWithFrame:CGRectMake(self.view.width - 30 - 8, (naviBarHeight-30)/2, 30, 30)];
+        _selectButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
+        [_selectButton setImage:bundleImageNamed(imagePickerVc.photoDefImageName) forState:UIControlStateNormal];
+        [_selectButton setImage:bundleImageNamed(imagePickerVc.photoSelImageName) forState:UIControlStateSelected];
+        [_selectButton addTarget:self action:@selector(select:) forControlEvents:UIControlEventTouchUpInside];
+        [_naviBar addSubview:_selectButton];
+    }
     
     [_naviBar addSubview:_backButton];
     [self.view addSubview:_naviBar];
@@ -371,6 +378,40 @@ CGFloat const livePhotoSignMargin = 10.f;
     [_collectionView registerClass:[LFPhotoPreviewVideoCell class] forCellWithReuseIdentifier:@"LFPhotoPreviewVideoCell"];
 }
 
+- (void)configClipView
+{
+    LFImagePickerController *imagePickerVc = (LFImagePickerController *)self.navigationController;
+    if (imagePickerVc.allowClip) {
+        _selectButton.hidden = YES;
+        _collectionView.scrollEnabled = NO;
+        
+        _clipBGView = [[UIView alloc] init];
+        _clipBGView.userInteractionEnabled = NO;
+        _clipBGView.frame = self.view.bounds;
+        [self.view addSubview:_clipBGView];
+        
+        _clipView = [[UIView alloc] init];
+        _clipView.frame = CGRectMake(0, 0, imagePickerVc.clipSize.width, imagePickerVc.clipSize.height);
+        _clipView.center = self.view.center;
+        _clipView.userInteractionEnabled = NO;
+        _clipView.layer.borderWidth = 1.f;
+        _clipView.layer.borderColor = [UIColor whiteColor].CGColor;
+        if (imagePickerVc.needCircleClip) {
+            _clipView.clipsToBounds = YES;
+            CGFloat maxWH = MAX(imagePickerVc.clipSize.width, imagePickerVc.clipSize.height);
+            if (maxWH > self.view.width) {
+                maxWH = self.view.width;
+            }
+            imagePickerVc.clipSize = CGSizeMake(maxWH,maxWH);
+            _clipView.layer.cornerRadius = maxWH /2;
+        }
+        [self.view addSubview:_clipView];
+        
+        // 裁切背景图
+        [LFPhotoClipManager overlayClippingWithView:_clipBGView cropREct:_clipView.frame containerView:self.view needCircleClip:imagePickerVc.needCircleClip];
+    }
+}
+
 #pragma mark - Click Event
 
 - (void)select:(UIButton *)selectButton {
@@ -453,7 +494,21 @@ CGFloat const livePhotoSignMargin = 10.f;
         return;
     }
 
-    if (self.doneButtonClickBlock) {
+    if (imagePickerVc.allowClip) { // 裁剪状态
+        NSIndexPath *indexPath = [NSIndexPath indexPathForItem:_currentIndex inSection:0];
+        LFPhotoPreviewCell *cell = (LFPhotoPreviewCell*)[_collectionView cellForItemAtIndexPath:indexPath];
+        UIView *clipView = [[UIView alloc] init];
+        clipView.bounds = CGRectMake(0, 0, imagePickerVc.clipSize.width, imagePickerVc.clipSize.height);
+        clipView.center = self.view.center;
+        UIImage *clipImage = [LFPhotoClipManager clipImageView:cell.imageView toRect:clipView.frame zoomScale:cell.scrollView.zoomScale containerView:self.view];
+        if (imagePickerVc.needCircleClip) {
+            clipImage = [LFPhotoClipManager clipCircleImage:clipImage];
+        }
+        if (self.doneButtonClickClipModeBlock) {
+            self.doneButtonClickClipModeBlock(clipImage, _models[_currentIndex]);
+        }
+    }
+    else if (self.doneButtonClickBlock) { // 非裁剪状态
         self.doneButtonClickBlock();
     }
 }
@@ -587,7 +642,8 @@ CGFloat const livePhotoSignMargin = 10.f;
         self.tempEditImage = nil;
     }
     cell.model = model;
-    
+    cell.allowClip = imagePickerVc.allowClip;
+    cell.clipSize = imagePickerVc.clipSize;
     return cell;
 }
 

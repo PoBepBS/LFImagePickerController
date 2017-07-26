@@ -183,6 +183,22 @@
     self.thumbnailCompressSize = kThumbnailCompressSize;
     self.maxVideoDuration = kMaxVideoDurationze;
     self.autoSavePhotoAlbum = YES;
+    
+    self.allowClip = NO;
+    self.needCircleClip = NO;
+    self.clipSize = CGSizeMake(100, 100);
+}
+
+- (void)setAllowClip:(BOOL)allowClip
+{
+    _allowClip = allowClip;
+    if (allowClip) {
+        self.allowPickingOriginalPhoto = NO;
+        self.allowPickingGif = NO;
+        self.allowPickingVideo = NO;
+        self.allowEditting = NO;
+        self.maxImagesCount = 1;
+    }
 }
 
 - (void)observeAuthrizationStatusChange {

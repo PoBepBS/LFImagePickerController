@@ -40,22 +40,22 @@
     _playerLayer.bounds = self.imageView.bounds;
 }
 
-
 - (IBAction)buttonAction1:(id)sender {
     LFImagePickerController *imagePicker = [[LFImagePickerController alloc] initWithMaxImagesCount:9 delegate:self];
 //    imagePicker.allowTakePicture = NO;
 //    imagePicker.sortAscendingByCreateDate = NO;
-    imagePicker.doneBtnTitleStr = @"发送";
+    imagePicker.doneBtnTitleStr = @"确定";
+    imagePicker.allowClip = YES;
+    imagePicker.clipSize = CGSizeMake(self.view.bounds.size.width, self.view.bounds.size.width * 0.75);
 //    imagePicker.allowEditting = NO;
-    imagePicker.supportAutorotate = YES; /** 适配横屏 */
+//    imagePicker.supportAutorotate = YES; /** 适配横屏 */
 //    imagePicker.imageCompressSize = 200; /** 标清图压缩大小 */
 //    imagePicker.thumbnailCompressSize = 20; /** 缩略图压缩大小 */
-    imagePicker.allowPickingGif = YES; /** 支持GIF */
-    imagePicker.allowPickingLivePhoto = YES; /** 支持Live Photo */
+//    imagePicker.allowPickingGif = YES; /** 支持GIF */
+//    imagePicker.allowPickingLivePhoto = YES; /** 支持Live Photo */
 //    imagePicker.autoSelectCurrentImage = NO; /** 关闭自动选中 */
 //    imagePicker.defaultAlbumName = @"123"; /** 指定默认显示相册 */
     [self presentViewController:imagePicker animated:YES completion:nil];
-    
 }
 
 - (IBAction)buttonAction2:(id)sender {
@@ -90,6 +90,11 @@
     /** 关闭自动选中 */
     imagePicker.autoSelectCurrentImage = NO;
     [self presentViewController:imagePicker animated:YES completion:nil];
+}
+
+- (void)lf_imagePickerController:(LFImagePickerController *)picker didFinishClipPhoto:(UIImage *)clipImage asset:(id)asset
+{
+    self.imageView.image = clipImage;
 }
 
 - (void)lf_imagePickerController:(LFImagePickerController *)picker didFinishPickingResult:(NSArray <LFResultObject /* <LFResultImage/LFResultVideo> */*> *)results;

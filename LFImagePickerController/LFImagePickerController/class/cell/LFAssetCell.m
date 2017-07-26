@@ -133,6 +133,12 @@
     }
 }
 
+- (void)hideSelectButton
+{
+    self.selectPhotoButton.hidden = YES;
+    self.selectImageView.hidden   = YES;
+}
+
 #pragma mark - Lazy load
 
 - (UIButton *)selectPhotoButton {
