@@ -266,11 +266,6 @@
 
 #pragma mark - UIScrollViewDelegate
 
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView
-{
-    NSLog(@"%f, %f",scrollView.contentOffset.x,scrollView.contentOffset.y);
-}
-
 - (nullable UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView {
     return _imageContainerView;
 }

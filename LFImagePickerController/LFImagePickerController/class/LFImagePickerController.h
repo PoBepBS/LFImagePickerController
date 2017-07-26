@@ -24,7 +24,6 @@
 /// This init method just for previewing photos, complete block call back  (invalid delegate)/ 用这个初始化方法以预览图片 complete => 完成后返回全新数组 （代理无效）
 - (instancetype)initWithSelectedPhotos:(NSArray <UIImage *>*)selectedPhotos index:(NSInteger)index complete:(void (^)(NSArray <UIImage *>* photos))complete;
 
-
 /** 预览模式 */
 @property (nonatomic, readonly) BOOL isPreview;
 

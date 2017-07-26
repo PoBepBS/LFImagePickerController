@@ -9,10 +9,16 @@
 #import "ViewController.h"
 #import "LFImagePickerController.h"
 
-#import "UIImage+LF_Format.h"
+#import "LFImagePickerHeader.h"
 #import "LFAssetManager.h"
+#import "LFAssetManager+Authorization.h"
+#import "UIImage+LF_Format.h"
+#import "UIAlertView+LF_Block.h"
+#import "LFAssetManager.h"
+#import "LFAssetManager+SaveAlbum.h"
+#import <MobileCoreServices/UTCoreTypes.h>
 
-@interface ViewController () <LFImagePickerControllerDelegate>
+@interface ViewController () <LFImagePickerControllerDelegate,UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 {
     UITapGestureRecognizer *singleTapRecognizer;
 }
@@ -41,12 +47,16 @@
 }
 
 - (IBAction)buttonAction1:(id)sender {
+//    LFImagePickerController *vc = [[LFImagePickerController alloc] initWithCameraMode:self];
+//    [self presentViewController:vc animated:YES completion:nil];
+//    return;
+    
     LFImagePickerController *imagePicker = [[LFImagePickerController alloc] initWithMaxImagesCount:9 delegate:self];
 //    imagePicker.allowTakePicture = NO;
 //    imagePicker.sortAscendingByCreateDate = NO;
     imagePicker.doneBtnTitleStr = @"确定";
-    imagePicker.allowClip = YES;
-    imagePicker.clipSize = CGSizeMake(self.view.bounds.size.width, self.view.bounds.size.width * 0.75);
+//    imagePicker.allowClip = YES;
+//    imagePicker.clipSize = CGSizeMake(self.view.bounds.size.width, self.view.bounds.size.width * 0.75);
 //    imagePicker.allowEditting = NO;
 //    imagePicker.supportAutorotate = YES; /** 适配横屏 */
 //    imagePicker.imageCompressSize = 200; /** 标清图压缩大小 */
@@ -59,14 +69,17 @@
 }
 
 - (IBAction)buttonAction2:(id)sender {
-    int limit = 10;
-    [[LFAssetManager manager] getCameraRollAlbum:NO allowPickingImage:YES fetchLimit:limit ascending:YES completion:^(LFAlbum *model) {
+    [self takePhoto];
+    return;
+    
+    int limit = 1;
+    [[LFAssetManager manager] getCameraRollAlbum:NO allowPickingImage:YES fetchLimit:limit ascending:NO completion:^(LFAlbum *model) {
         [[LFAssetManager manager] getAssetsFromFetchResult:model.result allowPickingVideo:NO allowPickingImage:YES fetchLimit:limit ascending:NO completion:^(NSArray<LFAsset *> *models) {
             NSMutableArray *array = [@[] mutableCopy];
             for (LFAsset *asset in models) {
                 [array addObject:asset.asset];
             }
-            LFImagePickerController *imagePicker = [[LFImagePickerController alloc] initWithSelectedAssets:array index:6 excludeVideo:YES];
+            LFImagePickerController *imagePicker = [[LFImagePickerController alloc] initWithSelectedAssets:array index:0 excludeVideo:YES];
             imagePicker.pickerDelegate = self;
 //            imagePicker.allowPickingGif = YES; /** 支持GIF */
             /** 全选 */
@@ -170,4 +183,97 @@
 
 }
 
+#pragma mark - UIImagePickerController
+
+- (void)takePhoto {
+    AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    if ((authStatus == AVAuthorizationStatusRestricted || authStatus ==AVAuthorizationStatusDenied) && iOS7Later) {
+        // 无权限 做一个友好的提示
+        NSString *appName = [[NSBundle mainBundle].infoDictionary valueForKey:@"CFBundleDisplayName"];
+        if (!appName) appName = [[NSBundle mainBundle].infoDictionary valueForKey:@"CFBundleName"];
+        NSString *message = [NSString stringWithFormat:@"请在iPhone的\"设置-隐私-相机\"中允许%@访问相机",appName];
+        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:@"无法使用相机" message:message cancelButtonTitle:@"取消" otherButtonTitles:@"设置" block:^(UIAlertView *alertView, NSInteger buttonIndex) {
+            if (buttonIndex == 1) { // 去设置界面，开启相机访问权限
+                if (iOS8Later) {
+                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+                } else {
+                    NSURL *privacyUrl = [NSURL URLWithString:@"prefs:root=Privacy&path=CAMERA"];
+                    if ([[UIApplication sharedApplication] canOpenURL:privacyUrl]) {
+                        [[UIApplication sharedApplication] openURL:privacyUrl];
+                    } else {
+                        NSString *message = @"无法跳转到隐私设置页面，请手动前往设置页面，谢谢";
+                        UIAlertView * alert = [[UIAlertView alloc]initWithTitle:@"抱歉" message:message delegate:nil cancelButtonTitle:@"确定" otherButtonTitles: nil];
+                        [alert show];
+                    }
+                }
+            }
+        }];
+        
+        [alert show];
+    } else { // 调用相机
+        if ([UIImagePickerController isSourceTypeAvailable: UIImagePickerControllerSourceTypeCamera]) {
+            LFImagePickerController *imagePickerVc = (LFImagePickerController *)self.navigationController;
+            if ([imagePickerVc.pickerDelegate respondsToSelector:@selector(lf_imagePickerControllerTakePhoto:)]) {
+                [imagePickerVc.pickerDelegate lf_imagePickerControllerTakePhoto:imagePickerVc];
+            } else if (imagePickerVc.imagePickerControllerTakePhoto) {
+                imagePickerVc.imagePickerControllerTakePhoto();
+            } else {
+                /** 调用内置相机模块 */
+                UIImagePickerControllerSourceType srcType = UIImagePickerControllerSourceTypeCamera;
+                UIImagePickerController *mediaPickerController = [[UIImagePickerController alloc] init];
+                mediaPickerController.sourceType = srcType;
+                mediaPickerController.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+                mediaPickerController.delegate = self;
+                mediaPickerController.mediaTypes = [[NSArray alloc] initWithObjects: (NSString *) kUTTypeImage, nil];
+                
+                /** warning：Snapshotting a view that has not been rendered results in an empty snapshot. Ensure your view has been rendered at least once before snapshotting or snapshot after screen updates. */
+                [self presentViewController:mediaPickerController animated:YES completion:NULL];
+            }
+        } else {
+            NSLog(@"模拟器中无法打开照相机,请在真机中使用");
+        }
+    }
+}
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+    [picker dismissViewControllerAnimated:YES completion:nil];
+    
+    LFImagePickerController *imagePickerVc = (LFImagePickerController *)self.navigationController;
+    [imagePickerVc showProgressHUDText:nil isTop:YES];
+    
+    NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
+    if (picker.sourceType==UIImagePickerControllerSourceTypeCamera && [mediaType isEqualToString:@"public.image"]){
+        UIImage *chosenImage = info[UIImagePickerControllerOriginalImage];
+        [[LFAssetManager manager] savePhotoWithImage:chosenImage completion:^(NSError *error) {
+            if (!error) {
+                [[LFAssetManager manager] getCameraRollAlbum:NO allowPickingImage:YES fetchLimit:1 ascending:NO completion:^(LFAlbum *model) {
+                    [[LFAssetManager manager] getAssetsFromFetchResult:model.result allowPickingVideo:NO allowPickingImage:YES fetchLimit:1 ascending:NO completion:^(NSArray<LFAsset *> *models) {
+                        NSMutableArray *array = [@[] mutableCopy];
+                        for (LFAsset *asset in models) {
+                            [array addObject:asset.asset];
+                        }
+                        LFImagePickerController *imagePicker = [[LFImagePickerController alloc] initWithSelectedAssets:array index:0 excludeVideo:YES];
+                        imagePicker.pickerDelegate = self;
+                        [self presentViewController:imagePicker animated:YES completion:nil];
+                    }];
+                }];
+            } else if (error) {
+                [imagePickerVc hideProgressHUD];
+                UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"拍照错误" message:error.localizedDescription cancelButtonTitle:@"确定" otherButtonTitles:nil block:^(UIAlertView *alertView, NSInteger buttonIndex) {
+                    [picker dismissViewControllerAnimated:YES completion:nil];
+                }];
+                [alertView show];
+            }
+        }];
+    } else {
+        [imagePickerVc hideProgressHUD];
+        [picker dismissViewControllerAnimated:YES completion:nil];
+    }
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+    [picker dismissViewControllerAnimated:YES completion:nil];
+}
 @end

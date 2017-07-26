@@ -366,4 +366,58 @@
     });
 }
 
+#pragma mark - save photo
+
+- (void)savePhotoWithImage:(UIImage *)image completion:(void (^)(NSError *error))completion {
+    [self savePhotoWithImage:image location:nil completion:completion];
+}
+
+- (void)savePhotoWithImage:(UIImage *)image location:(CLLocation *)location completion:(void (^)(NSError *error))completion {
+    NSData *data = UIImageJPEGRepresentation(image, 0.9);
+    if (iOS9Later) { // 这里有坑... iOS8系统下这个方法保存图片会失败 原来是因为PHAssetResourceType是iOS9之后的...
+        [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+            PHAssetResourceCreationOptions *options = [[PHAssetResourceCreationOptions alloc] init];
+            options.shouldMoveFile = YES;
+            PHAssetCreationRequest *request = [PHAssetCreationRequest creationRequestForAsset];
+            [request addResourceWithType:PHAssetResourceTypePhoto data:data options:options];
+            if (location) {
+                request.location = location;
+            }
+            request.creationDate = [NSDate date];
+        } completionHandler:^(BOOL success, NSError *error) {
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                if (success && completion) {
+                    completion(nil);
+                } else if (error) {
+                    NSLog(@"保存照片出错:%@",error.localizedDescription);
+                    if (completion) {
+                        completion(error);
+                    }
+                }
+            });
+        }];
+    } else {
+        [self.assetLibrary writeImageToSavedPhotosAlbum:image.CGImage orientation:[self orientationFromImage:image] completionBlock:^(NSURL *assetURL, NSError *error) {
+            if (error) {
+                NSLog(@"保存图片失败:%@",error.localizedDescription);
+                if (completion) {
+                    completion(error);
+                }
+            } else {
+                // 多给系统0.5秒的时间，让系统去更新相册数据
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    if (completion) {
+                        completion(nil);
+                    }
+                });
+            }
+        }];
+    }
+}
+
+- (ALAssetOrientation)orientationFromImage:(UIImage *)image {
+    NSInteger orientation = image.imageOrientation;
+    return orientation;
+}
+
 @end
